@@ -1,0 +1,467 @@
+{%- extends 'reveal/index.html.j2' -%}
+{% set title = 'Beyond the Basics: Data Visualization in Python' %}
+{% set nb_title = nb.metadata.get('title', '') or resources['metadata']['name'] %}
+{% set repo_name = 'python-data-viz-workshop' %}
+{% set svg_plot_max_height = 650 %}
+
+{% from 'mathjax.html.j2' import mathjax %}
+{% from 'jupyter_widgets.html.j2' import jupyter_widgets %}
+
+{% set reveal_url_prefix = resources.reveal.url_prefix | default('https://unpkg.com/reveal.js@4.0.2', true) %}
+{% set reveal_theme = resources.reveal.theme | default('white', true) %}
+{% set reveal_transition = resources.reveal.transition | default('slide', true) %}
+{% set reveal_number = resources.reveal.number | default('', true) %}
+{% set reveal_scroll = resources.reveal.scroll | default(false, true) | json_dumps %}
+
+{%- block header -%}
+<!DOCTYPE html>
+<html>
+<head>
+
+{%- block html_head -%}
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+<title>{{title}} {{nb_title}} slides &ndash; Stefanie Molin</title>
+
+{%- block html_head_js -%}
+{%- block html_head_js_jquery -%}
+<script src="{{ resources.jquery_url }}"></script>
+{%- endblock html_head_js_jquery -%}
+{%- block html_head_js_requirejs -%}
+<script src="{{ resources.require_js_url }}"></script>
+{%- endblock html_head_js_requirejs -%}
+{%- endblock html_head_js -%}
+
+{% block jupyter_widgets %}
+  {%- if "widgets" in nb.metadata -%}
+    {{ jupyter_widgets(resources.jupyter_widgets_base_url, resources.html_manager_semver_range, resources.widget_renderer_url) }}
+  {%- endif -%}
+{% endblock jupyter_widgets %}
+
+<!-- General and theme style sheets -->
+<link rel="stylesheet" href="{{ reveal_url_prefix }}/dist/reveal.css">
+<!-- Reveal Theme -->
+<link rel="stylesheet" href="{{ reveal_url_prefix }}/dist/theme/{{reveal_theme}}.css" id="theme">
+<!-- Font Awesome icons -->
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.1.1/css/all.min.css"
+  rel="stylesheet" type="text/css">
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+}
+</script>
+
+{% for css in resources.inlining.css -%}
+  <style type="text/css">
+    {{ css }}
+  </style>
+{% endfor %}
+
+{% block notebook_css %}
+{{ resources.include_css("static/index.css") }}
+{% if resources.theme == 'dark' %}
+    {{ resources.include_css("static/theme-dark.css") }}
+{% else %}
+    {{ resources.include_css("static/theme-light.css") }}
+{% endif %}
+<style type="text/css">
+.qr-code {
+    min-width: 400px;
+}
+a.anchor-link {
+    display: none;
+}
+blockquote {
+    width: 80% !important;
+}
+figcaption {
+    margin-right: 200px;
+}
+.highlight { /* spacing between code block and the code inside it */
+    margin: 0.4em 0.4em 0em !important;
+}
+.jp-Notebook {
+    padding: 0;
+}
+.CodeMirror pre {
+    padding: 0.4em !important;
+    overflow-x: scroll !important; /* allow scrolling to see full code block */
+}
+.jp-MarkdownOutput {
+    overflow: hidden !important;
+}
+.jp-RenderedHTMLCommon.jp-RenderedHTML.jp-OutputArea-output.jp-OutputArea-executeResult {
+    padding-right: 5px !important; /* padding after lead-in text */
+}
+.jp-RenderedSVG > svg, .jp-OutputArea-output > svg { /* scale SVG plots */
+    width: 75%;
+}
+.jp-OutputArea-executeResult > img, .jp-OutputArea-output > img { /* formatting for HoloViews image outputs */
+    margin: 0 !important;
+}
+.jp-Collapser { /* hide that blue collapse button on the side of cells that does nothing */
+    display: none;
+}
+.slide-number {
+    background-color: transparent !important;
+    color: black !important;
+    font-size: 18pt !important;
+}
+.slides { /* pull slides to left */
+    margin-left: -30px !important;
+}
+/* scrollbar formatting */
+::-webkit-scrollbar-thumb {
+    visibility: hidden; /* hide the scrollbar when not in use */
+}
+:hover::-webkit-scrollbar-thumb {
+    visibility: hidden; /* to show the scrollbar on hover, change to "visible" */
+}
+::-webkit-scrollbar-track-piece:start { /* make a little space at the top of the scrollbar */
+    background: transparent;
+    margin-top: 20px;
+}
+::-webkit-scrollbar-track-piece:end { /* leave enough space at the bottom of the scrollbar for the slide number */
+    background: transparent;
+    margin-bottom: 60px;
+}
+:root {
+    --jp-ui-font-size1: 18pt;       /* size of tables in outputs */
+    --jp-content-font-size1: 26pt;  /* base size of text */
+    --jp-code-font-size: 24pt;      /* size of code */
+    --jp-cell-prompt-width: 160px;  /* width of In[] labels */
+}
+@media print {
+  body {
+    margin: 0;
+  }
+}
+</style>
+
+{{ resources.include_css("static/custom_reveal.css") }}
+
+{% endblock notebook_css %}
+{%- block html_head_js_mathjax -%}
+{{ mathjax(resources.mathjax_url) }}
+{%- endblock html_head_js_mathjax -%}
+
+{%- endblock html_head -%}
+
+</head>
+{% endblock header%}
+
+{%- block body_header -%}
+{% if resources.theme == 'dark' %}
+<body class="jp-Notebook" data-jp-theme-light="false" data-jp-theme-name="JupyterLab Dark">
+{% else %}
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+{% endif %}
+<div class="reveal">
+<!--
+<div class="footer" style="padding: 4px; font-size: 22px;">
+    {{title}} &ndash; Stefanie Molin
+    <div style="float: right; margin-top: -18px;">
+        <a href="https://codespaces.new/stefmolin/{{repo_name}}"
+            style="z-index: 1;" target="_blank" rel="noopener noreferrer"
+        >
+            <img src="https://img.shields.io/badge/open-codespace-black?logo=github"
+                alt="Open in GitHub Codespaces"
+                style="max-width: 100%; margin: 20px 0 0 0;">
+        </a>
+        <a href="https://github.com/stefmolin/{{repo_name}}" style="z-index: 1;" target="_blank" rel="noopener noreferrer">
+            <img alt="View repo on GitHub" src="https://img.shields.io/badge/view-repo-orange?logo=github" style="max-width: 100%; margin: 20px 0 0 0;">
+        </a>
+    </div>
+</div>
+-->
+<div class="clock" style="margin: 5px 5px 0px 0px; float: right;"></div>
+<div class="slides">
+{%- endblock body_header -%}
+
+{% block footer_js %}
+<script>
+require(
+    {
+      // it makes sense to wait a little bit when you are loading
+      // reveal from a cdn in a slow connection environment
+      waitSeconds: 15
+    },
+    [
+      "{{ reveal_url_prefix }}/dist/reveal.js",
+      "{{ reveal_url_prefix }}/plugin/notes/notes.js",
+      "https://cdn.jsdelivr.net/npm/luxon@3.2.1/build/global/luxon.min.js"
+    ],
+
+    function(Reveal, RevealNotes){
+        // Full list of configuration options available here: https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: false, // don't show for larger versions to have more room
+            progress: true,
+            slideNumber: "c",
+            pdfSeparateFragments: false,
+            history: true,
+            transition: "{{reveal_transition}}",
+            plugins: [RevealNotes],
+            width: 1950,
+            height: 1000,
+            keyboard: {
+                // map numpad numbers to their top row equivalents
+                97: () => Reveal.triggerKey(49), // 1
+                98: () => Reveal.triggerKey(50), // 2
+                99: () => Reveal.triggerKey(51), // 3
+            }
+        });
+
+        const isVisible = (display) => display === 'none' ? 'block' : 'none';
+
+        // jump to slide prompt
+        Reveal.addKeyBinding(
+            { keyCode: 71, key: "G", description: "Go to slide" },
+            () => {
+                const slides = Reveal.getSlides();
+                const input = prompt("Go to slide");
+                if (input !== undefined && input !== "" && input !== null){
+                    if (!isNaN(input)) {
+                      const requestedSlideNumber = Math.max(Math.min(input, slides.length) - 1, 0);
+                      const slideIndices = Reveal.getIndices(slides[requestedSlideNumber]);
+                      // set fragment to large number (100) to ensure the full slide is displayed
+                      Reveal.slide(slideIndices.h, slideIndices.v, 100);
+                    }
+                    else if (typeof input === "string" || input instanceof String) {
+                        const slideName = input.replaceAll(' ', '-');
+                        if (namedSlides.includes(slideName)) window.location = `#/${slideName}`;
+                    }
+                }
+            }
+        );
+
+        // for working with dates/times
+        const { DateTime, Duration } = luxon;
+
+        // add exercise timer
+        let updateExerciseTimerInterval;
+        Reveal.addKeyBinding(
+            { keyCode: 84, key: "T", description: "Start the exercise timer" },
+            () => {
+                let exerciseTime = prompt("Timer duration in minutes (leave empty to cancel)");
+                const cleanup = () => {
+                  clearInterval(updateExerciseTimerInterval);
+                  $('.exercise-timer').remove();
+                }
+                if (exerciseTime !== undefined && exerciseTime !== "" && exerciseTime !== null){
+                    if (!isNaN(exerciseTime) && exerciseTime >= 0.1) {
+                      exerciseTime = Duration.fromMillis(exerciseTime * 60 * 1000);
+                      const countDownTime = DateTime.now().plus(exerciseTime);
+
+                      const getTimeText = (elapsedTime) => `⏱ ${elapsedTime.toFormat('mm:ss')}`;
+
+                      if ($('.exercise-timer').length === 0) { // add to DOM if not already there
+                          $('.reveal').append(
+                              `<aside class="exercise-timer" style="display: block; position: absolute; `
+                              + `top: 10px; left: 15px; right: auto; bottom: auto;`
+                              + `font-size: 50px;"></aside>`
+                          );
+                      }
+
+                      // in case the key is pressed while a timer is already running, clear the old one
+                      if (!isNaN(updateExerciseTimerInterval)) clearInterval(updateExerciseTimerInterval);
+
+                      // write the starting time minus the 1 second delay before the update
+                      const updateFrequency = 1000;
+                      $('.exercise-timer').text(getTimeText(exerciseTime.minus({ milliseconds: updateFrequency })));
+
+                      // update the remaining time each second
+                      const updateTimer = () => {
+                          const now = DateTime.now();
+                          const elapsedTime = countDownTime.diff(now);
+                          const secondsRemaining = elapsedTime.as('seconds')
+
+                          if (secondsRemaining >= 1) $('.exercise-timer').text(getTimeText(elapsedTime));
+                          else if (secondsRemaining >= 0) {
+                              $('.exercise-timer').text(getTimeText(Duration.fromMillis(0)));
+                              const audio = new Audio('https://raw.githubusercontent.com/stefmolin/pandas-workshop/main/media/time_is_up.m4a');
+                              audio.play();
+                          }
+                          else if (secondsRemaining >= -5) $('.exercise-timer').text("TIME'S UP").css('color', 'red');
+                          else cleanup();
+                      }
+                      updateExerciseTimerInterval = setInterval(updateTimer, updateFrequency);
+                    }
+                }
+                else cleanup();
+            }
+        );
+
+        // add clock
+        let updateClockInterval;
+        Reveal.addKeyBinding(
+            { keyCode: 67, key: "C", description: "Toggle the clock" },
+            () => {
+                  if (!isNaN(updateClockInterval)) {
+                      clearInterval(updateClockInterval);
+                      $('.clock').text('');
+                      updateClockInterval = 'cleared';
+                  }
+                  else {
+                      const updateTime = () => $('.clock').text(DateTime.now().toFormat('hh:mm a'));
+                      updateTime();
+                      updateClockInterval = setInterval(updateTime, 1000);
+                  }
+            }
+        );
+
+        // show clock in red when 5 minutes from desired time
+        let updateFMWInterval;
+        Reveal.addKeyBinding(
+            { keyCode: 90, key: "Z", description: "Set 5-minute warning" },
+            () => {
+                const input = prompt("What is the ending time? (leave empty to clear)");
+                const cleanup = () => {
+                  clearInterval(updateFMWInterval);
+                  $('.clock').text('').css('color', 'black');
+                  updateFMWInterval = 'cleared';
+                }
+                if (input !== undefined && input !== "" && input !== null && input.includes(':')){
+
+                  if (!isNaN(updateFMWInterval)) cleanup();
+
+                  const [time, ampm] = input.split(' ');
+                  let [endHour, endMinute] = time.split(':').map((x) => parseInt(x));
+                  const militaryTime = ampm === undefined;
+                  let shiftHours = militaryTime ? 0 : (ampm.toLowerCase() === 'pm' ? 12 : 0);
+
+                  const endAt = DateTime.now().startOf('minute').set({
+                      hour: endHour + shiftHours,
+                      minute: endMinute
+                  });
+                  const warnAt = endAt.minus({ minutes: 5 });
+
+                  const checkTime = () => {
+                      const now = DateTime.now();
+                      if (now >= endAt) cleanup();
+                      else if (now >= warnAt) {
+                          $('.clock').text(now.toFormat('hh:mm a')).css('color', 'red');
+                      }
+                  }
+                  updateFMWInterval = setInterval(checkTime, 1000);
+                }
+                else cleanup();
+            }
+        );
+
+        var update = function(event){
+          if(MathJax.Hub.getAllJax(Reveal.getCurrentSlide())){
+            MathJax.Hub.Rerender(Reveal.getCurrentSlide());
+          }
+        };
+
+        Reveal.addEventListener('slidechanged', update);
+
+        function setScrollingSlide() {
+            const scale = 95;
+            const h = $('.reveal').height() * scale / 100;
+            const slide = $('section.present').find('section')
+              .filter(function() {
+                return $(this).height() > h;
+              })
+              .css('overflow', 'scroll');
+
+            if (self !== top) {
+              // in iframe --> speaker mode view
+              slide
+                .css('height', '100%') // alternate values for speaker view (in iframe)
+                .css('margin-top', '-50px')
+                .css('transform', 'scale(0.95)');
+              if (slide.context.location.search.includes('controls=false')) {
+                // scroll presenter view to see fragments that will be coming up
+                slide.scrollTop($('section.present')[0].scrollHeight / 2);
+              }
+            } else {
+              slide
+                .css('height', 'calc(' + scale + 'vh)') // sets height to scale percent of the viewport height (vh)
+                .css('overflow', 'scroll')
+                .css('margin-bottom', '70px')
+                .css('margin-top', '-20px');
+            }
+
+            // hack to resize plots rendered as SVGs if they hit the height limit
+            $('section.present').find('.jp-RenderedSVG').find('svg')
+              .filter(function() {
+                return $(this).height() >= {{svg_plot_max_height}} && $(this).width() / $(this).height() < 2;
+              })
+              .css('width', '50%');
+
+            // make sure that responsive Bokeh plots don't outgrow their containers
+            $('section.present').find('.bk-root').parent().css('max-width', '95%');
+
+            // resize videos based on their aspect ratios (avoid introducing whitespace)
+            const video = $('section.present').find('.jp-OutputArea-executeResult video');
+            const aspectRatio = video.width() / video.height();
+            const videoWidth = 900;
+            video.css('width', `${videoWidth}px`).css('height', `${videoWidth / aspectRatio}px`);
+
+            // hide some of empty space above the logos when enabling a plotting extension
+            $('section.present').find('.jp-RenderedJavaScript').parent().css('height', '0px');
+        }
+
+        // check and set the scrolling slide every time the slide change
+        Reveal.addEventListener('slidechanged', setScrollingSlide);
+
+        // create links to any tagged cells
+        const namedSlides = [];
+        $('[class*="celltag_"]').each((index, element) => {
+            const tag = $(element).attr('class').split(' ').filter(x => x.includes('celltag_'))[0];
+            const [ attr, value ] = tag.replace('celltag_', '').split('_');
+            $(`.${tag}`).parentsUntil('section').last().parent().attr(attr, value);
+
+            if (attr === "id") namedSlides.push(value);
+        })
+
+        // add keybindings for section shortcuts (cells must be tagged)
+        const shortcuts = [
+            { name: "section 1", key: "1", id: "section-1", keyCode: 49 },
+            { name: "section 2", key: "2", id: "section-2", keyCode: 50 },
+            { name: "section 3", key: "3", id: "section-3", keyCode: 51 },
+            { name: "outro", key: "E", id: "related-content", keyCode: 69 },
+        ];
+        for (const shortcut of shortcuts) {
+            const { id, key, name, keyCode } = shortcut;
+            Reveal.addKeyBinding(
+                { keyCode, key, description: `Jump to ${name}` },
+                () => { window.location = `#/${id}`; }
+            );
+        }
+
+        // fix any collisions in the clip-path introduced from reproducible SVG plots
+        // that cause plot components not to render (clipPath objects with duplicate IDs)
+        const clipPathIds = {};
+        $('clipPath').each((index, element) => {
+            const oldId = $(element).attr('id');
+            if (oldId in clipPathIds) {
+                // change this id and grab the parent SVG
+                // and then for all the elements with clip-path switch the id
+                const newId = `${oldId}${clipPathIds[oldId]}`;
+                $(element).attr('id', newId);
+                $(element).closest('svg').find('[clip-path]').each((index, item) => {
+                    if ($(item).attr('clip-path') === `url(#${oldId})`) {
+                        $(item).attr('clip-path', `url(#${newId})`);
+                    }
+                });
+                clipPathIds[oldId] += 1;
+            }
+            else clipPathIds[oldId] = 1;
+        });
+    }
+);
+</script>
+{% endblock footer_js %}
