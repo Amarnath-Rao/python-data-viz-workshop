@@ -1,7 +1,7 @@
 # This workflow builds the workshop environment on Mac, Linux, and Windows for
 # multiple versions of Python to confirm it can be properly installed.
 # 
-# Author: Stefanie Molin
+# Author: Amarnath Rao
 
 name: Env Build
 
